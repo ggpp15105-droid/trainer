@@ -9,35 +9,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Тренер">
-<link rel="manifest" href='data:application/manifest+json,{"name":"AI-Тренер","short_name":"Тренер","start_url":".","display":"standalone","background_color":"%230d0f13","theme_color":"%230d0f13","orientation":"portrait","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 rx=%2722%27 fill=%27%235b8cff%27/%3E%3Crect x=%2716%27 y=%2744%27 width=%2712%27 height=%2714%27 rx=%273%27 fill=%27%23fff%27/%3E%3Crect x=%2772%27 y=%2744%27 width=%2712%27 height=%2714%27 rx=%273%27 fill=%27%23fff%27/%3E%3Crect x=%2730%27 y=%2734%27 width=%2710%27 height=%2734%27 rx=%273%27 fill=%27%23fff%27/%3E%3Crect x=%2760%27 y=%2734%27 width=%2710%27 height=%2734%27 rx=%273%27 fill=%27%23fff%27/%3E%3Crect x=%2740%27 y=%2746%27 width=%2720%27 height=%279%27 fill=%27%23fff%27/%3E%3C/svg%3E","sizes":"any","type":"image/svg+xml","purpose":"any"}]}'>
+<link rel="manifest" id="mflink">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20rx='22'%20fill='%235b8cff'/%3E%3Crect%20x='16'%20y='44'%20width='12'%20height='14'%20rx='3'%20fill='%23fff'/%3E%3Crect%20x='72'%20y='44'%20width='12'%20height='14'%20rx='3'%20fill='%23fff'/%3E%3Crect%20x='30'%20y='34'%20width='10'%20height='34'%20rx='3'%20fill='%23fff'/%3E%3Crect%20x='60'%20y='34'%20width='10'%20height='34'%20rx='3'%20fill='%23fff'/%3E%3Crect%20x='40'%20y='46'%20width='20'%20height='9'%20fill='%23fff'/%3E%3C/svg%3E">
 <title>AI-Тренер</title>
 <script>
-/* Service Worker: кэширует приложение для работы офлайн */
-if('serviceWorker' in navigator){
- try{
-  var swCode='var C="fit-pwa-v5";'
-   +'self.addEventListener("install",function(e){'
-   +'self.skipWaiting();});'
-   +'self.addEventListener("activate",function(e){'
-   +'e.waitUntil(caches.keys().then(function(ks){'
-   +'return Promise.all(ks.filter(function(k){return k!==C})'
-   +'.map(function(k){return caches.delete(k)}))})'
-   +'.then(function(){return self.clients.claim()}));});'
-   +'self.addEventListener("fetch",function(e){'
-   +'if(e.request.method!=="GET"){return}'
-   +'e.respondWith(caches.match(e.request).then(function(r){'
-   +'var f=fetch(e.request).then(function(n){'
-   +'if(n&&n.ok){var cp=n.clone();'
-   +'caches.open(C).then(function(c2){c2.put(e.request,cp)})}'
-   +'return n;})'
-   +'.catch(function(){return r});'
-   +'return r?Promise.race([f,r]):f;}))});';
-  var blob=new Blob([swCode],{type:'text/javascript'});
-  var swUrl=URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(function(){});
- }catch(e){}
-}
 function errBox(t){
  var b=document.getElementById('errbox');
  if(!b){
@@ -63,6 +38,64 @@ document.addEventListener('DOMContentLoaded',function(){
   }
  },1500);
 });
+/* ===== PWA: иконки PNG + manifest + service worker ===== */
+function makeIcon(size){
+ var c=document.createElement('canvas');
+ c.width=size;c.height=size;
+ var x=c.getContext('2d');
+ var r=size*0.22;
+ x.fillStyle='#5b8cff';
+ x.beginPath();
+ x.moveTo(r,0);x.lineTo(size-r,0);
+ x.arcTo(size,0,size,size,r);
+ x.lineTo(size,size-r);x.arcTo(size,size,0,size,r);
+ x.lineTo(r,size);x.arcTo(0,size,0,0,r);
+ x.lineTo(0,r);x.arcTo(0,0,size,0,r);
+ x.closePath();x.fill();
+ x.fillStyle='#ffffff';
+ function rr(px,py,w,h,rd){
+  x.beginPath();
+  x.moveTo(px+rd,py);x.lineTo(px+w-rd,py);
+  x.arcTo(px+w,py,px+w,py+h,rd);
+  x.lineTo(px+w,py+h-rd);x.arcTo(px+w,py+h,px,py+h,rd);
+  x.lineTo(px+rd,py+h);x.arcTo(px,py+h,px,py,rd);
+  x.lineTo(px,py+rd);x.arcTo(px,py,px+w,py,rd);
+  x.closePath();x.fill();
+ }
+ var u=size/100;
+ rr(16*u,44*u,12*u,14*u,3*u);
+ rr(72*u,44*u,12*u,14*u,3*u);
+ rr(30*u,34*u,10*u,34*u,3*u);
+ rr(60*u,34*u,10*u,34*u,3*u);
+ x.fillRect(40*u,46*u,20*u,9*u);
+ return c.toDataURL('image/png');
+}
+try{
+ var mObj={
+  name:'AI-Тренер',
+  short_name:'Тренер',
+  start_url:location.pathname,
+  scope:location.pathname.slice(0,location.pathname.lastIndexOf('/')+1)||'/',
+  display:'standalone',
+  orientation:'portrait',
+  background_color:'#0d0f13',
+  theme_color:'#0d0f13',
+  icons:[
+   {src:makeIcon(192),sizes:'192x192',type:'image/png',purpose:'any'},
+   {src:makeIcon(512),sizes:'512x512',type:'image/png',purpose:'any'}
+  ]
+ };
+ var mBlob=new Blob([JSON.stringify(mObj)],
+  {type:'application/manifest+json'});
+ document.getElementById('mflink').href=URL.createObjectURL(mBlob);
+}catch(e){}
+try{
+ if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+   navigator.serviceWorker.register('./sw.js').catch(function(){});
+  });
+ }
+}catch(e){}
 </script>
 <style>
 :root{--bg:#0d0f13;--card:#161a22;--card2:#20262f;--txt:#e8ebf2;--mut:#8b93a5;--acc:#5b8cff;--ok:#3ecf8e;--warn:#ff8a80;--line:#283042}
@@ -310,14 +343,16 @@ main>section{animation:viewIn .22s ease}
  to{opacity:1;transform:translate(-50%,0)}
 }
 #instban{
- display:none;margin:10px 0;
+ display:none;position:fixed;
+ left:10px;right:10px;
+ bottom:calc(90px + env(safe-area-inset-bottom));
  background:linear-gradient(180deg,#1d2740,#16203a);
  border:1px solid var(--acc);border-radius:14px;
- padding:12px 14px;
+ padding:12px 14px;z-index:7;
 }
 #instban b{display:block;margin-bottom:4px}
 #instban .x{
- position:absolute;top:6px;right:10px;
+ position:absolute;top:4px;right:6px;
  background:none;box-shadow:none;color:var(--mut);
  font-size:16px;padding:4px 8px;
 }
@@ -330,8 +365,8 @@ main>section{animation:viewIn .22s ease}
 <div id="instban">
 <button class="x" data-act="instclose">✕</button>
 <b>📲 Установить как приложение</b>
-<span class="mut" id="insttext">Нажми «Поделиться» → «На экран Домой» (iPhone)
-или меню ⋮ → «Установить приложение» (Android).</span>
+<span class="mut" id="insttext">Android: меню ⋮ → «Установить приложение».
+iPhone: «Поделиться» → «На экран Домой».</span>
 </div>
 <main>
 <section id="view-onboard" hidden></section>
@@ -356,44 +391,6 @@ main>section{animation:viewIn .22s ease}
 </nav>
 <div id="modal" onclick="if(event.target===this)closeModal()"><div class="mbody"></div></div>
 <script>
-/* ===== PWA: баннер установки ===== */
-var installEvt=null;
-window.addEventListener('beforeinstallprompt',function(e){
- e.preventDefault();
- installEvt=e;
- try{
-  var d=P();
-  if(!d||!d.instDismissed){showInstBanner()}
- }catch(e2){showInstBanner()}
-});
-function showInstBanner(){
- var b=document.getElementById('instban');
- if(b){b.style.display='block'}
-}
-try{
- var navUA=navigator.userAgent||'';
- var iOS=/iphone|ipad|ipod/i.test(navUA);
- var standalone=(window.navigator.standalone===true)
-  ||window.matchMedia('(display-mode: standalone)').matches;
- var swOK=('serviceWorker' in navigator);
- var p=P();
- if(!standalone&&p&&p.plan&&p.logs&&p.logs.length&&!p.instDismissed){
-  if(swOK){
-   setTimeout(function(){
-    if(installEvt){showInstBanner()}
-   },4000);
-  }else if(iOS){
-   setTimeout(showInstBanner,4000);
-  }
- }
-}catch(e){}
-function dismissInst(){
- var p=P();
- p.instDismissed=true;
- DB.save();
- var b=document.getElementById('instban');
- if(b){b.style.display='none'}
-}
 /* ===== СПРАВОЧНИКИ ===== */
 var DOW=['','Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 var MON=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -2034,14 +2031,11 @@ function renderSettings(){
  s+='<li>В «Питании»: пирамида БЖУ, вода с авто-целью, блюда-комбо.</li>';
  s+='<li>Кнопка ⏱ — таймер отдыха, «+30 с» — продлить.</li>';
  s+='<li>После недели 2 и после недели 6 пришли итоги ассистенту.</li></ol></div>';
- s+='<div class="card"><h2>Установка как приложение (PWA)</h2><ol>';
- s+='<li>Скачай этот файл на компьютер.</li>';
- s+='<li>Открой netlify.com/drop и перетащи файл — получишь ссылку.</li>';
- s+='<li>Открой ссылку в браузере телефона.</li>';
- s+='<li>iPhone: «Поделиться» → «На экран Домой».';
- s+=' Android: меню ⋮ → «Установить приложение».</li>';
- s+='</ol><p class="mut">После установки работает офлайн.';
- s+=' Данные телефонов separate — переноси Экспортом/Импортом.</p></div>';
+ s+='<div class="card"><h2>Установка на телефон</h2><p class="mut">';
+ s+='Android: меню ⋮ → «Установить приложение». ';
+ s+='iPhone: «Поделиться» → «На экран Домой».';
+ s+=' Работает офлайн. Данные телефонов separate —';
+ s+=' переноси Экспортом/Импортом.</p></div>';
  h.innerHTML=s;
 }
 function switchProfile(n){
@@ -2129,6 +2123,23 @@ function restorePlan(i){
  if(p.plan){p.history.unshift(p.plan)}
  p.plan=pl;DB.save();planWeek=null;
  toast('План восстановлен');go('plan');
+}
+/* ===== БАННЕР УСТАНОВКИ ===== */
+var installEvt=null;
+window.addEventListener('beforeinstallprompt',function(e){
+ e.preventDefault();
+ installEvt=e;
+ var p=P();
+ if(p&&p.instDismissed){return}
+ var b=document.getElementById('instban');
+ if(b){b.style.display='block'}
+});
+function dismissInst(){
+ var p=P();
+ p.instDismissed=true;
+ DB.save();
+ var b=document.getElementById('instban');
+ if(b){b.style.display='none'}
 }
 /* ===== ЕДИНЫЙ ОБРАБОТЧИК КЛИКОВ ===== */
 document.addEventListener('click',function(e){
